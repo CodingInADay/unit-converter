@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تبدیل واحدها | Unit Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        body {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5" fill="%23e9ecef" opacity="0.5"/><rect x="5" y="5" width="5" height="5" fill="%23e9ecef" opacity="0.5"/><rect x="5" y="0" width="5" height="5" fill="%23f1f3f5" opacity="0.5"/><rect x="0" y="5" width="5" height="5" fill="%23f1f3f5" opacity="0.5"/></svg>') repeat;
+            color: #333;
+            direction: rtl;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 2em;
+            color: #2c3e50;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .lang-select {
+            margin-top: 10px;
+        }
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .category {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .category:hover {
+            transform: translateY(-5px);
+        }
+        .category h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2em;
+            color: #4a4a4a;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .convert-to {
+            font-size: 0.8em;
+            color: #666;
+        }
+        input[type="number"], select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            width: 100px;
+        }
+        .result {
+            margin-top: 15px;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #27ae60;
+        }
+        .share-btn {
+            cursor: pointer;
+            margin-left: 10px;
+            display: inline-block;
+            stroke: #2980b9;
+        }
+        @media (max-width: 600px) {
+            .categories {
+                grid-template-columns: 1fr;
+            }
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            input[type="number"], select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="title">تبدیل واحدها</h1>
+            <div class="lang-select">
+                <select id="language" onchange="changeLanguage()">
+                    <option value="fa" selected>فارسی</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </header>
+        <div class="categories" id="categories">
+            <!-- Categories will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            fa: {
+                title: "تبدیل واحدها",
+                categories: [
+                    "طول و فاصله", "وزن و جرم", "حجم و ظرفیت", "دما", "واحدهای آشپزی",
+                    "زمان", "مساحت", "سرعت", "انرژی و توان", "فشار"
+                ],
+                units: {
+                    length: ["میلی‌متر", "سانتی‌متر", "متر", "کیلومتر", "اینچ", "فوت", "یارد", "مایل", "ذرع"],
+                    weight: ["گرم", "کیلوگرم", "تن", "پوند", "اونس", "مثقال", "سیر"],
+                    volume: ["میلی‌لیتر", "لیتر", "متر مکعب", "گالن", "پینت", "کوارت"],
+                    temperature: ["سانتی‌گراد", "فارنهایت", "کلوین"],
+                    cooking: ["قاشق چای‌خوری", "قاشق غذاخوری", "فنجان", "پیمانه", "قطره", "لیوان"],
+                    time: ["ثانیه", "دقیقه", "ساعت", "روز", "هفته", "ماه", "سال"],
+                    area: ["سانتی‌متر مربع", "متر مربع", "کیلومتر مربع", "هکتار", "فوت مربع", "مایل مربع", "جریب"],
+                    speed: ["متر بر ثانیه", "کیلومتر بر ساعت", "مایل بر ساعت", "گره", "فوت بر ثانیه"],
+                    energy: ["ژول", "کیلوژول", "وات", "کیلووات", "کالری", "کیلوکالری", "بی‌تی‌یو"],
+                    pressure: ["پاسکال", "کیلوپاسکال", "بار", "میلی‌بار", "اتمسفر", "میلی‌متر جیوه", "پوند بر اینچ مربع"]
+                },
+                resultText: "مقدار {value} {fromUnit} برابر است با {result} {toUnit}",
+                convertTo: "تبدیل به:",
+                placeholder: "مقدار",
+                share: "اشتراک"
+            },
+            en: {
+                title: "Unit Converter",
+                categories: [
+                    "Length/Distance", "Weight/Mass", "Volume/Capacity", "Temperature", "Cooking Units",
+                    "Time", "Area", "Speed", "Energy/Power", "Pressure"
+                ],
+                units: {
+                    length: ["Millimeter", "Centimeter", "Meter", "Kilometer", "Inch", "Foot", "Yard", "Mile", "Zaraj"],
+                    weight: ["Gram", "Kilogram", "Tonne", "Pound", "Ounce", "Mithqal", "Seer"],
+                    volume: ["Milliliter", "Liter", "Cubic Meter", "Gallon", "Pint", "Quart"],
+                    temperature: ["Celsius", "Fahrenheit", "Kelvin"],
+                    cooking: ["Teaspoon", "Tablespoon", "Cup", "Pint", "Drop", "Glass"],
+                    time: ["Second", "Minute", "Hour", "Day", "Week", "Month", "Year"],
+                    area: ["Square Centimeter", "Square Meter", "Square Kilometer", "Hectare", "Square Foot", "Square Mile", "Acre"],
+                    speed: ["Meter per Second", "Kilometer per Hour", "Mile per Hour", "Knot", "Foot per Second"],
+                    energy: ["Joule", "Kilojoule", "Watt", "Kilowatt", "Calorie", "Kilocalorie", "BTU"],
+                    pressure: ["Pascal", "Kilopascal", "Bar", "Millibar", "Atmosphere", "mmHg", "psi"]
+                },
+                resultText: "{value} {fromUnit} equals {result} {toUnit}",
+                convertTo: "Convert to:",
+                placeholder: "Value",
+                share: "Share"
+            }
+        };
+
+        const icons = {
+            length: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            weight: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            volume: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            temperature: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            cooking: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            time: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            area: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            speed: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            energy: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            pressure: '<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d3d3d3"/></svg>',
+            share: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="2"><path d="M18 8l-6-6-6 6m6-6v16m-8 4h16"/></svg>'
+        };
+
+        const conversionRates = {
+            length: { "میلی‌متر": 1000, "سانتی‌متر": 100, "متر": 1, "کیلومتر": 0.001, "اینچ": 39.3701, "فوت": 3.28084, "یارد": 1.09361, "مایل": 0.000621371, "ذرع": 0.96 },
+            weight: { "گرم": 1000, "کیلوگرم": 1, "تن": 0.001, "پوند": 2.20462, "اونس": 35.274, "مثقال": 217.391, "سیر": 13.3333 },
+            volume: { "میلی‌لیتر": 1000, "لیتر": 1, "متر مکعب": 0.001, "گالن": 0.264172, "پینت": 2.11338, "کوارت": 1.05669 },
+            temperature: { "Celsius": x => x, "Fahrenheit": x => (x * 9/5) + 32, "Kelvin": x => x + 273.15, "سانتی‌گراد": x => x, "فارنهایت": x => (x * 9/5) + 32, "کلوین": x => x + 273.15 },
+            cooking: { "قاشق چای‌خوری": 1, "قاشق غذاخوری": 0.333333, "فنجان": 0.0208333, "پیمانه": 0.0208333, "قطره": 100, "لیوان": 0.0208333 },
+            time: { "ثانیه": 1, "دقیقه": 0.0166667, "ساعت": 0.000277778, "روز": 0.0000115741, "هفته": 0.00000165344, "ماه": 0.000000380517, "سال": 0.0000000317098 },
+            area: { "سانتی‌متر مربع": 10000, "متر مربع": 1, "کیلومتر مربع": 0.000001, "هکتار": 0.0001, "فوت مربع": 10.7639, "مایل مربع": 0.000000386102, "جریب": 0.000247105 },
+            speed: { "متر بر ثانیه": 1, "کیلومتر بر ساعت": 0.277778, "مایل بر ساعت": 0.44704, "گره": 0.514444, "فوت بر ثانیه": 3.28084 },
+            energy: { "ژول": 1, "کیلوژول": 0.001, "وات": 1, "کیلووات": 0.001, "کالری": 0.2388459, "کیلوکالری": 0.0002388459, "بی‌تی‌یو": 0.000947817 },
+            pressure: { "پاسکال": 1, "کیلوپاسکال": 0.001, "بار": 0.00001, "میلی‌بار": 0.01, "اتمسفر": 0.00000986923, "میلی‌متر جیوه": 0.00750062, "پوند بر اینچ مربع": 0.000145038 }
+        };
+
+        function changeLanguage() {
+            const lang = document.getElementById("language").value;
+            document.body.style.direction = lang === "fa" ? "rtl" : "ltr";
+            document.getElementById("title").textContent = translations[lang].title;
+            renderCategories(lang);
+        }
+
+        function renderCategories(lang) {
+            const container = document.getElementById("categories");
+            container.innerHTML = "";
+            translations[lang].categories.forEach((cat, index) => {
+                const key = Object.keys(translations.en.units)[index];
+                const div = document.createElement("div");
+                div.className = "category";
+                div.innerHTML = `
+                    <h2>${icons[key]}${cat}</h2>
+                    <div class="input-group">
+                        <input type="number" id="value-${key}" placeholder="${translations[lang].placeholder}" oninput="convert('${key}', '${lang}')">
+                        <select id="from-${key}" onchange="convert('${key}', '${lang}')">
+                            ${translations[lang].units[key].map(unit => `<option value="${unit}">${unit}</option>`).join("")}
+                        </select>
+                        <span class="convert-to">${translations[lang].convertTo}</span>
+                        <select id="to-${key}" onchange="convert('${key}', '${lang}')">
+                            ${translations[lang].units[key].map(unit => `<option value="${unit}">${unit}</option>`).join("")}
+                        </select>
+                    </div>
+                    <div class="result" id="result-${key}"></div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function convert(category, lang) {
+            const valueInput = document.getElementById(`value-${category}`);
+            const fromUnit = document.getElementById(`from-${category}`).value;
+            const toUnit = document.getElementById(`to-${category}`).value;
+            const resultDiv = document.getElementById(`result-${category}`);
+
+            const value = parseFloat(valueInput.value);
+            if (isNaN(value)) return;
+
+            let result;
+            if (category === "temperature") {
+                const baseCelsius = fromUnit === "سانتی‌گراد" || fromUnit === "Celsius" ? value :
+                                   fromUnit === "فارنهایت" || fromUnit === "Fahrenheit" ? (value - 32) * 5/9 :
+                                   value - 273.15;
+                result = conversionRates.temperature[toUnit](baseCelsius);
+            } else {
+                const fromRate = conversionRates[category][translations.fa.units[category].find(u => translations[lang].units[category].indexOf(fromUnit) === translations.fa.units[category].indexOf(u))];
+                const toRate = conversionRates[category][translations.fa.units[category].find(u => translations[lang].units[category].indexOf(toUnit) === translations.fa.units[category].indexOf(u))];
+                const toBase = 1 / fromRate;
+                result = value * toBase * toRate;
+            }
+
+            result = result.toFixed(2);
+            const shareText = translations[lang].resultText
+                .replace("{value}", value)
+                .replace("{fromUnit}", fromUnit)
+                .replace("{result}", result)
+                .replace("{toUnit}", toUnit);
+            resultDiv.innerHTML = `${result} ${toUnit} <span class="share-btn" onclick="shareResult('${lang}', '${value}', '${fromUnit}', '${result}', '${toUnit}')">${icons.share}</span>`;
+        }
+
+        function shareResult(lang, value, fromUnit, result, toUnit) {
+            const text = translations[lang].resultText
+                .replace("{value}", value)
+                .replace("{fromUnit}", fromUnit)
+                .replace("{result}", result)
+                .replace("{toUnit}", toUnit);
+            if (navigator.share) {
+                navigator.share({ text });
+            } else {
+                alert(text);
+            }
+        }
+
+        // Initialize
+        renderCategories("fa");
+    </script>
+</body>
+</html>
